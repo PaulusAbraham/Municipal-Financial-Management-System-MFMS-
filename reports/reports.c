@@ -1,107 +1,75 @@
 #include <stdio.h>
 #include "reports.h"
-#include "budgets.h"
-#include "assets.h"
-#include "suppliers.h"
 #include "employees.h"
+#include "budget.h"
+#include "suppliers.h"
+#include "assets.h"
 
-void employeeReport(void);
-void budgetReport(void);
-void supplierReport(void);
-void assetReport(void);
-
-int getSupplierCount(void);
-const char *getSupplierName(int index);
-char *getSupplierTown(int index);
-
-void displayReports(void)
-{
-    char choice[10];
-   
-    do {
-        printf("\n========================================\n");
-        printf("           REPORTS MODULE           \n");
-        printf("         Developed by: MM :-)              \n");
-        printf("========================================\n");
-        printf("1. Employee Report\n");
-        printf("2. Budget Report\n");
-        printf("3. Supplier Report\n");
-        printf("4. Asset Report\n");
-        printf("5. Exit\n");
-        printf("========================================\n");
-        printf("Enter your choice please: ");
-
-        fgets(choice, sizeof(choice), stdin);
-
-        if (choice[0] == '1')
-        {
-            employeeReport();
-        }
-        else if (choice[0] == '2')
-        {
-            budgetReport();
-        }
-        else if (choice[0] == '3')
-        {
-            supplierReport();
-        }
-        else if (choice[0] == '4')
-        {
-            assetReport();
-        }
-        else if (choice[0] == '5')
-        {
-            printf("Leaving reports menu...\n");
-        }
-        else
-        {
-            printf("Oopsies. Please try again.\n");
-        }
-
-    } while (choice[0] != '5');
-}
 void employeeReport(void)
 {
-    printf("\n============================\n");
-    printf("        EMPLOYEE REPORT\n");
-    printf("============================\n");
+    int i;
+    double total, average, highest, lowest, salary;
 
-    printf("Total number of employees\n");
-    printf("Average salary\n");
-    printf("Highest salary\n");
-    printf("Lowest salary\n");
+    if (employeeCount == 0) {
+        printf("\n---- EMPLOYEE REPORT ----\n");
+        printf("No employees registered yet.\n");
+        return;
+    }
+
+    highest = lowest = calculateSalary(&employees[0]);
+    total = 0.0;
+    for (i = 0; i < employeeCount; i++) {
+        salary = calculateSalary(&employees[i]);
+        total += salary;
+        if (salary > highest) {
+            highest = salary;
+        }
+        if (salary < lowest) {
+            lowest = salary;
+        }
+    }
+    average = total / employeeCount;
+
+    printf("\n---- EMPLOYEE REPORT ----\n");
+    printf("Total Employees : %d\n", employeeCount);
+    printf("Average Salary  : N$%.2f\n", average);
+    printf("Highest Salary  : N$%.2f\n", highest);
+    printf("Lowest Salary   : N$%.2f\n", lowest);
 }
 
 void budgetReport(void)
 {
-    int i;
-    float totalAllocated = 0;
-    float totalSpent = 0;
-    float remaining;
+    int i, exceeded;
+    double totalAllocated, totalExpenditure, totalRemaining;
 
-    printf("\n========================\n");
-    printf("        BUDGET REPORT\n");
-    printf("========================\n");
-
-    for (i = 0; i < count; i++)
-    {
-        totalAllocated = totalAllocated + allocated[i];
-        totalSpent = totalSpent + spent[i];
+    printf("\n---- BUDGET REPORT ----\n");
+    if (budgetCount == 0) {
+        printf("No budgets recorded yet.\n");
+        return;
     }
 
-    remaining = totalAllocated - totalSpent;
+    totalAllocated = totalExpenditure = totalRemaining = 0.0;
+    exceeded = 0;
+    for (i = 0; i < budgetCount; i++) {
+        totalAllocated += budgets[i].allocated;
+        totalExpenditure += budgets[i].expenditure;
+        totalRemaining += calculateRemaining(&budgets[i]);
+        if (isOverBudget(&budgets[i])) {
+            exceeded++;
+        }
+    }
 
-    printf("Total allocated budget : %.2f\n", totalAllocated);
-    printf("Total expenditure      : %.2f\n", totalSpent);
-    printf("Remaining budget       : %.2f\n", remaining);
-
-    printf("\nDepartments exceeding budget:\n");
-
-    for (i = 0; i < count; i++)
-    {
-        if (spent[i] > allocated[i])
-        {
-            printf("- %s\n", names[i]);
+    printf("Total Allocated Budget : N$%.2f\n", totalAllocated);
+    printf("Total Expenditure      : N$%.2f\n", totalExpenditure);
+    printf("Total Remaining Budget : N$%.2f\n", totalRemaining);
+    printf("Departments Exceeding Budget: %d\n", exceeded);
+    if (exceeded > 0) {
+        for (i = 0; i < budgetCount; i++) {
+            if (isOverBudget(&budgets[i])) {
+                printf("  - %s (over by N$%.2f)\n",
+                       budgets[i].department,
+                       budgets[i].expenditure - budgets[i].allocated);
+            }
         }
     }
 }
@@ -109,53 +77,101 @@ void budgetReport(void)
 void supplierReport(void)
 {
     int i;
-    int total;
 
-    printf("\n========================\n");
-    printf("       SUPPLIER REPORT\n");
-    printf("========================\n");
+    printf("\n---- SUPPLIER REPORT ----\n");
+    if (supplierCount == 0) {
+        printf("No suppliers registered yet.\n");
+        return;
+    }
 
-    total = getSupplierCount();
-
-    printf("Total registered suppliers: %d\n", total);
-
-    printf("\nSupplier List:\n");
-
-    for (i = 0; i < total; i++)
-    {
-        printf("%d. %s - %s\n",
-               i + 1,
-               getSupplierName(i),
-               getSupplierTown(i));
+    printf("Total Suppliers: %d\n", supplierCount);
+    for (i = 0; i < supplierCount; i++) {
+        printf("%d | %s | %s | %s | %s\n",
+               suppliers[i].id,
+               suppliers[i].name,
+               suppliers[i].email,
+               suppliers[i].phone,
+               suppliers[i].town);
     }
 }
 
 void assetReport(void)
 {
     int i;
-    float totalValue = 0;
+    double totalValue;
 
-    printf("\n========================\n");
-    printf("         ASSET REPORT\n");
-    printf("========================\n");
-
-    printf("Total registered assets: %d\n", assetCount);
-
-    for (i = 0; i < assetCount; i++)
-    {
-        totalValue = totalValue + assetPurchaseValue[i];
+    printf("\n---- ASSET REPORT ----\n");
+    if (assetCount == 0) {
+        printf("No assets registered yet.\n");
+        return;
     }
 
-    printf("Total asset value: %.2f\n", totalValue);
-
-    printf("\nAsset List:\n");
-
-    for (i = 0; i < assetCount; i++)
-    {
-        printf("%d. %s - %s - %.2f\n",
-               i + 1,
-               assetName[i],
-               assetDepartment[i],
-               assetPurchaseValue[i]);
+    totalValue = 0.0;
+    for (i = 0; i < assetCount; i++) {
+        totalValue += assets[i].purchaseValue;
     }
+
+    printf("Total Assets        : %d\n", assetCount);
+    printf("Total Purchase Value: N$%.2f\n", totalValue);
+    for (i = 0; i < assetCount; i++) {
+        printf("%d | %s | %s | N$%.2f | %s | %s\n",
+               assets[i].id,
+               assets[i].name,
+               assets[i].type,
+               assets[i].purchaseValue,
+               assets[i].department,
+               assets[i].condition);
+    }
+}
+
+void fullReport(void)
+{
+    employeeReport();
+    budgetReport();
+    supplierReport();
+    assetReport();
+}
+
+void reportsMenu(void)
+{
+    int choice;
+
+    do {
+        printf("\n---------- REPORTS ----------\n");
+        printf("1. Employee Report\n");
+        printf("2. Budget Report\n");
+        printf("3. Supplier Report\n");
+        printf("4. Asset Report\n");
+        printf("5. Full Report (All)\n");
+        printf("6. Back to Main Menu\n");
+        printf("-------------------------------\n");
+
+        if (!readInt("Enter your choice: ", &choice)) {
+            printf("Invalid input. Please enter a number from 1 to 6.\n");
+            continue;
+        }
+
+        switch (choice) {
+            case 1:
+                employeeReport();
+                break;
+            case 2:
+                budgetReport();
+                break;
+            case 3:
+                supplierReport();
+                break;
+            case 4:
+                assetReport();
+                break;
+            case 5:
+                fullReport();
+                break;
+            case 6:
+                printf("Returning to main menu--\n");
+                break;
+            default:
+                printf("Invalid menu choice. Please try again.\n");
+        }
+    } while (choice != 6);
 }
