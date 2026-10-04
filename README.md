@@ -30,6 +30,6 @@ gcc -std=c99 -Wall main.c employees.c budget.c suppliers.c assets.c reports.c ut
 
 ## How to Run depending on device
 
-Mac / Linux:  ./mfms
+Mac/Linux:  ./mfms
 Windows:      mfms.exe
 
