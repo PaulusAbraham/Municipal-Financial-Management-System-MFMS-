@@ -30,7 +30,7 @@ int main(void)
 
         if (!readInt("Enter your choice:", &choice)) {
             printf("Invalid input. Please enter a number between 1 and 6.\n");
-            continue;
+            continue; // restarts loop 
         }
 
         switch (choice) {
@@ -52,10 +52,10 @@ int main(void)
             case 6:
                 printf("Thank you for using the MFMS :). !!Goodbye!!\n");
                 break;
-            default:
+            default:  // handles choices that that do not match cases
                 printf("Invalid choice. Please choose a number that is between 1 and 6.\n");
         }
-    } while (choice != 6);
+    } while (choice != 6); // if not 6 display menu if 6 exit
 
     return 0;
 }
